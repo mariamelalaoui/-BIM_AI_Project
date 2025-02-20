@@ -67,7 +67,7 @@ if input_option == "Upload Image":
 
         # Convert color format for Streamlit
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        st.image(image, caption="Processed Image with Labels", use_container_width=True)
+        st.image(image, caption="Processed Image with Labels", use_column_width=True)
 
 # 🎥 **Video Upload & Processing**
 elif input_option == "Upload Video":
@@ -127,7 +127,7 @@ elif input_option == "Live Webcam":
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         # Display processed frame in Streamlit
-        stframe.image(frame, channels="RGB", use_container_width=True)
+        stframe.image(frame, channels="RGB", use_column_width=True)
 
         # Stop when user clicks "Stop" button
         if stopButton:
