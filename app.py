@@ -15,19 +15,21 @@ def get_generated_video(run_folder='runs/detect'):
     
     # Sort the filtered directories by creation time
     predict_dirs.sort(key=lambda d: os.path.getctime(os.path.join(run_folder, d)), reverse=True)
+    
+    if not predict_dirs:
+        return None  # Return None if no processed video is found
+    
     # Get the path of the most recent predict folder
     latest_predict_folder = os.path.join(run_folder, predict_dirs[0])
 
     # Get the path of the video file in the predict folder
-    mp4_files = [f for f in os.listdir(latest_predict_folder) if re.match(r'.*\.mp4$', f)]
+    mp4_files = [f for f in os.listdir(latest_predict_folder) if f.endswith(".mp4")]
+    
     if mp4_files:
         video_file = os.path.join(latest_predict_folder, mp4_files[0])
+        return video_file
     else:
-        video_file = None
-
-    # Return the video file path
-    return video_file
-    
+        return None
 
 
 # Load YOLO model
@@ -67,6 +69,7 @@ if input_option == "Upload Image":
 
         # Convert color format for Streamlit
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
         st.image(image, caption="Processed Image with Labels", use_column_width=True)
 
 # 🎥 **Video Upload & Processing**
@@ -86,11 +89,20 @@ elif input_option == "Upload Video":
         with st.spinner("Processing video..."):
             results = model(temp_video.name, save=True)
         
-        st.success("✅ Processing complete! Check the results.")
-        video = get_generated_video()
-        st.video(video)
+        st.success("✅ Processing complete! Check the results below.")
+        
+        # Locate and display processed video
+        processed_video = get_generated_video()
+        if processed_video:
+            st.video(processed_video)
+            
+            # Provide download option
+            with open(processed_video, "rb") as file:
+                st.download_button(label="📥 Download Processed Video", data=file, file_name="processed_video.mp4", mime="video/mp4")
+        else:
+            st.error("⚠️ Processed video not found. Please check the runs/detect folder.")
 
-# 📷 **Live Webcam (Not Implemented Yet)**
+# 📷 **Live Webcam Detection**
 elif input_option == "Live Webcam":
     st.write("📷 **Live webcam detection is running...**")
 
@@ -100,7 +112,7 @@ elif input_option == "Live Webcam":
     # Streamlit live video display
     stframe = st.empty()
 
-    stopButton = st.button("Stop Webcam")
+    stop_button = st.button("Stop Webcam")
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -130,8 +142,7 @@ elif input_option == "Live Webcam":
         stframe.image(frame, channels="RGB", use_column_width=True)
 
         # Stop when user clicks "Stop" button
-        if stopButton:
+        if stop_button:
             cap.release()
             cv2.destroyAllWindows()
-
-    
+            break
